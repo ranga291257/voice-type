@@ -1,0 +1,15 @@
+[Unit]
+Description=Voice typing daemon (faster-whisper STT)
+After=graphical-session.target sound.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/voice-type/venv/bin/python %h/.local/share/voice-type/daemon.py
+Restart=on-failure
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+# Inherit DISPLAY/XAUTHORITY/DBUS from the user session so notify-send and xdotool work.
+
+[Install]
+WantedBy=graphical-session.target

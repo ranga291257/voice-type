@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Tiny client: sends a single 'T' byte to the voice-type daemon.
+
+Bound to a GNOME hotkey. Keep this script as light as possible so the
+hotkey response feels instant.
+"""
+
+from __future__ import annotations
+
+import os
+import socket
+import subprocess
+import sys
+from pathlib import Path
+
+RUNTIME_DIR = Path(
+    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+)
+SOCKET_PATH = RUNTIME_DIR / "voice-type.sock"
+
+
+def notify_error(msg: str) -> None:
+    subprocess.run(
+        [
+            "notify-send",
+            "--app-name=voice-type",
+            "--urgency=critical",
+            "--expire-time=3000",
+            "Voice typing",
+            msg,
+        ],
+        check=False,
+    )
+
+
+def main() -> int:
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "T"
+    if cmd not in ("T", "S", "Q"):
+        print(f"unknown command: {cmd}", file=sys.stderr)
+        return 2
+    if not SOCKET_PATH.exists():
+        notify_error("Daemon not running. Try: systemctl --user start voice-type")
+        return 1
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(2.0)
+            s.connect(str(SOCKET_PATH))
+            s.sendall(cmd.encode())
+            reply = s.recv(64).decode().strip()
+            if cmd == "S":
+                print(reply)
+            return 0
+    except (ConnectionRefusedError, FileNotFoundError, socket.timeout) as e:
+        notify_error(f"Cannot reach daemon: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
