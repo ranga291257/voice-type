@@ -40,7 +40,13 @@ If it prints `wayland`, log out, click the gear icon on the login screen, choose
 
 ## Install
 
-Open the Terminal app and run these commands:
+Open the Terminal app and run this one command:
+
+```bash
+git clone https://github.com/ranga291257/voice-type.git && cd voice-type && ./install.sh
+```
+
+Or run the same steps one by one:
 
 ```bash
 git clone https://github.com/ranga291257/voice-type.git
